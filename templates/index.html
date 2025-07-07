@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+    <script src="https://js.puter.com/v2/"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="bg-gray-900 text-gray-100 flex items-center justify-center min-h-screen font-sans">
+    <div id="passwordModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold mb-4">Acceso al Chat</h2>
+            <p class="mb-4">Por favor, introduce la contraseña para acceder al chat.</p>
+            <input type="password" id="passwordInput" class="modal-input" placeholder="Contraseña">
+            <p id="passwordError" class="error-message hidden">Contraseña incorrecta. Te quedan <span id="attemptsLeft">3</span> intentos.</p>
+            <button id="passwordSubmit" class="modal-button">Acceder</button>
+        </div>
+    </div>
+
+    <div id="nameModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold mb-4">¡Bienvenido al Chat!</h2>
+            <p class="mb-4">Para empezar a chatear, por favor dinos tu nombre.</p>
+            <input type="text" id="nameInput" class="modal-input" placeholder="Tu nombre">
+            <p id="nameError" class="error-message hidden">Por favor, introduce un nombre válido.</p>
+            <button id="nameSubmit" class="modal-button">Guardar Nombre</button>
+        </div>
+    </div>
+
+    <div id="accessDeniedOverlay" class="disabled-overlay hidden">
+        Acceso denegado.<br>Por favor, contacta al administrador.
+    </div>
+
+    <div id="settingsModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold mb-4">Configuración del Chat</h2>
+            <button id="clearChatHistoryButton" class="modal-button mb-4 w-full">Borrar Historial de Chat</button>
+            
+            <div id="adminSettings" class="hidden">
+                <h3 class="text-xl font-bold mb-2 mt-4">Configuración de Administrador</h3>
+                <p class="mb-2">Cambiar canción de fondo:</p>
+                <select id="songSelect" class="modal-input mb-2">
+                    <option value="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3">Canción 1 (SoundHelix)</option>
+                    <option value="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3">Canción 2 (SoundHelix)</option>
+                    <option value="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3">Canción 3 (SoundHelix)</option>
+                    </select>
+                <button id="changeSongButton" class="modal-button w-full mb-4">Cambiar Canción</button>
+                <button id="trollMessageButton" class="modal-button bg-red-600 hover:bg-red-700 w-full">¡Mensaje Troll Admin! 😈</button>
+            </div>
+
+            <button id="closeSettingsModal" class="modal-button mt-4 bg-gray-600 hover:bg-gray-700 w-full">Cerrar</button>
+        </div>
+    </div>
+
+
+    <div id="chatContainer" class="flex flex-col h-[90vh] w-full max-w-lg bg-gray-800 rounded-lg shadow-2xl overflow-hidden hidden">
+        <button id="settingsButton" class="absolute top-4 right-4 text-gray-400 hover:text-white z-10 p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M11.49 4.053a.75.75 0 011.06-.023l.11.109 3.911 3.911a.75.75 0 01-1.04 1.08L12.5 6.136V16.5a.75.75 0 01-1.5 0V6.136l-2.91 2.937a.75.75 0 01-1.08-1.04l.11-.11 3.91-3.911a.75.75 0 01.022-1.06z" clip-rule="evenodd" /></svg>
+        </button>
+
+        <div id="messages" class="flex-1 p-4 overflow-y-auto space-y-3 bg-gray-800">
+            </div>
+
+        <div class="p-4 bg-gray-700 flex items-center border-t border-gray-700 relative">
+            <div id="iaCommandMenu" class="ia-command-menu">
+                <div class="pb-2 text-gray-300 font-semibold">Comandos IA:</div>
+                <div id="geminiCommand" class="ia-command-menu-item">
+                    <span class="font-bold">@Gemini</span> <span class="description">- Pregunta a la IA</span>
+                </div>
+                <div id="dalleCommand" class="ia-command-menu-item mt-1">
+                    <span class="font-bold">@DALL·E</span> <span class="description">- Generar imagen</span>
+                </div>
+            </div>
+
+            <input type="text" id="messageInput" placeholder="Escribe un mensaje (@ para comandos IA)..." 
+                   class="flex-grow bg-gray-600 text-white placeholder-gray-400 p-3 rounded-full outline-none focus:ring-2 focus:ring-blue-500 border-none relative z-10"
+                   style="caret-color: white;">
+
+            <button id="sendButton"
+                    class="ml-3 bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 ease-in-out transform hover:scale-105">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.162.548l5 1.429a1 1 0 001.169-1.409l-7-14z"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <audio id="backgroundAudio" loop autoplay volume="0.2">
+        </audio>
+
+    <script src="{{ url_for('static', filename='chat-ui.js') }}"></script>
+    <script src="{{ url_for('static', filename='chat-history.js') }}"></script>
+    <script src="{{ url_for('static', filename='ai-logic.js') }}"></script>
+    <script src="{{ url_for('static', filename='auth.js') }}"></script>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>

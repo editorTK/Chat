@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat con JAJA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+        <h1 class="text-2xl font-bold mb-4 text-center">¡Chatea con tu amigo!</h1>
+        <div id="messages" class="border border-gray-300 p-4 h-64 overflow-y-auto mb-4 rounded-md bg-gray-50">
+            </div>
+        <div class="flex">
+            <input type="text" id="messageInput" placeholder="Escribe tu mensaje..." class="flex-grow border border-gray-300 p-2 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button id="sendButton" class="bg-blue-500 text-white p-2 rounded-r-md hover:bg-blue-600 transition duration-300">Enviar</button>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        var socket = io();
+
+        document.getElementById('sendButton').onclick = function() {
+            var input = document.getElementById('messageInput');
+            var msg = input.value;
+            if (msg) {
+                socket.emit('message', msg);
+                input.value = ''; // Limpia el input
+            }
+        };
+
+        socket.on('message', function(msg) {
+            var messagesDiv = document.getElementById('messages');
+            var p = document.createElement('p');
+            p.textContent = msg;
+            messagesDiv.appendChild(p);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll
+        });
+    </script>
+</body>
+</html>
