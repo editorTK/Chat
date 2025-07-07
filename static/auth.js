@@ -12,7 +12,7 @@
 // var userName; // de main.js
 // var isAdmin; // de main.js
 
-const CORRECT_PASSWORD_CLIENT_SIDE = 'TIAMO'; // Solo para propósitos de test, la verificación es server-side
+const CORRECT_PASSWORD_CLIENT_SIDE = 'tiamo'; // Solo para propósitos de test, la verificación es server-side
 const MAX_ATTEMPTS = 3;
 let attempts = 0;
 
