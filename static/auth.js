@@ -43,7 +43,7 @@ async function verifyPassword() {
             window.authSuccessCallback(); 
         } else if (response.status === 401) {
             attempts++;
-            attemptsLeftSpan.textContent = MAX_ATTUNTS - attempts;
+            attemptsLeftSpan.textContent = MAX_ATTEMPTS - attempts;
             passwordError.classList.remove('hidden');
             passwordInput.value = '';
             if (attempts >= MAX_ATTEMPTS) {
