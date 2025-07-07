@@ -6,8 +6,6 @@
 // Elementos del DOM (asumidos globales o pasados por main.js)
 // var messagesDiv, messageInput, iaCommandMenu, geminiCommand, dalleCommand;
 
-const GEMINI_COMMAND = '@Gemini';
-const DALLE_COMMAND = '@DALL·E';
 
 // Función para añadir mensajes al DOM
 function appendMessage(msg, type, id = null, senderName = null) {
@@ -88,7 +86,7 @@ window.initChatUIEventListeners = function() {
             iaCommandMenu.style.display = 'none';
         }
 
-        let isCommandInput = inputValue.startsWith(GEMINI_COMMAND) || inputValue.startsWith(DALLE_COMMAND);
+        let isCommandInput = inputValue.startsWith(window.GEMINI_COMMAND) || inputValue.startsWith(window.DALLE_COMMAND);
         if (isCommandInput) {
             messageInput.style.color = '#60A5FA';
         } else {
@@ -97,14 +95,14 @@ window.initChatUIEventListeners = function() {
     });
 
     geminiCommand.addEventListener('click', function() {
-        messageInput.value = GEMINI_COMMAND + ' ';
+        messageInput.value = window.GEMINI_COMMAND + ' ';
         iaCommandMenu.style.display = 'none';
         messageInput.focus();
         messageInput.style.color = '#60A5FA';
     });
 
     dalleCommand.addEventListener('click', function() {
-        messageInput.value = DALLE_COMMAND + ' ';
+        messageInput.value = window.DALLE_COMMAND + ' ';
         iaCommandMenu.style.display = 'none';
         messageInput.focus();
         messageInput.style.color = '#60A5FA';
@@ -115,7 +113,7 @@ window.initChatUIEventListeners = function() {
             if (!iaCommandMenu.contains(document.activeElement) && messageInput.value.trim() === '') {
                 iaCommandMenu.style.display = 'none';
             }
-            if (!messageInput.value.startsWith(GEMINI_COMMAND) && !messageInput.value.startsWith(DALLE_COMMAND)) {
+            if (!messageInput.value.startsWith(window.GEMINI_COMMAND) && !messageInput.value.startsWith(window.DALLE_COMMAND)) {
                 messageInput.style.color = 'white';
             }
         }, 100);
